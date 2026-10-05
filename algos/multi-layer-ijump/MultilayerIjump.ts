@@ -439,6 +439,7 @@ export class MultilayerIjump extends GeneralizedAstarAutorouter {
           obstacles,
           OBSTACLE_MARGIN: this.OBSTACLE_MARGIN,
           SHOULD_DETECT_CONJOINED_OBSTACLES: true,
+          getObstacleAt: (x, y) => obstacles.getObstacleAt(x, y, node.l),
         })
       }
 
