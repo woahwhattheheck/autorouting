@@ -21,6 +21,7 @@ export function getDistanceToOvercomeObstacle({
   OBSTACLE_MARGIN = 0.15,
   SHOULD_DETECT_CONJOINED_OBSTACLES = false,
   MAX_CONJOINED_OBSTACLES = 20,
+  getObstacleAt,
 }: {
   node: { x: number; y: number }
   travelDir: DirectionWithWallDistance
@@ -31,6 +32,11 @@ export function getDistanceToOvercomeObstacle({
   SHOULD_DETECT_CONJOINED_OBSTACLES?: boolean
   MAX_CONJOINED_OBSTACLES?: number
   obstaclesInRow?: number
+  /**
+   * Override obstacle lookup when the caller has additional spatial context,
+   * such as a layer index. The default preserves the 2d autorouter behavior.
+   */
+  getObstacleAt?: (x: number, y: number) => Obstacle | null
 }): number {
   let distToOvercomeObstacle: number
   if (travelDir.dx === 0) {
@@ -60,14 +66,17 @@ export function getDistanceToOvercomeObstacle({
     // http://localhost:3080/problem/traces/18#t2_iter[14] is a great example
     // of a path being too close because of a bad distToOvercomeObstacle b/c
     // of missing detection of obstacles within the wallDistance
-    const obstacleAtEnd = obstacles.getObstacleAt(
+    const obstacleAtEndX =
       node.x +
-        travelDir.dx * distToOvercomeObstacle +
-        wallDir.dx * (wallDir.wallDistance + 0.001),
+      travelDir.dx * distToOvercomeObstacle +
+      wallDir.dx * (wallDir.wallDistance + 0.001)
+    const obstacleAtEndY =
       node.y +
-        travelDir.dy * distToOvercomeObstacle +
-        wallDir.dy * (wallDir.wallDistance + 0.001),
-    )
+      travelDir.dy * distToOvercomeObstacle +
+      wallDir.dy * (wallDir.wallDistance + 0.001)
+    const obstacleAtEnd = getObstacleAt
+      ? getObstacleAt(obstacleAtEndX, obstacleAtEndY)
+      : obstacles.getObstacleAt(obstacleAtEndX, obstacleAtEndY)
     // const obstaclesAtEnd = obstacles.getObstaclesOverlappingRegion({
     //   minX: node.x + travelDir.dx * distToOvercomeObstacle,
     //   minY: node.y + travelDir.dy * distToOvercomeObstacle,
@@ -121,6 +130,7 @@ export function getDistanceToOvercomeObstacle({
         SHOULD_DETECT_CONJOINED_OBSTACLES,
         MAX_CONJOINED_OBSTACLES,
         OBSTACLE_MARGIN,
+        getObstacleAt,
       })
       distToOvercomeObstacle += endObstacleDistToOvercome
     }
